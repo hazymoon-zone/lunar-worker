@@ -16,7 +16,7 @@ func CreateAlertsForEligibleReminders(ctx context.Context, eligibleReminders []d
 	}
 	rlog.Info(fmt.Sprintf("Found %d alerts for today", len(alerts)))
 
-	now := time.Now()
+	now := time.Now().UTC()
 	result := make([]db.Alert, 0)
 	for _, reminder := range eligibleReminders {
 		hasAlertAlready := false

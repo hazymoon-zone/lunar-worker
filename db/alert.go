@@ -25,7 +25,7 @@ type Alert struct {
 }
 
 func GetAlertsForToday(ctx context.Context) ([]Alert, error) {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 	isToday := psql.Quote("alert_date").EQ(psql.Arg(today))
 
 	query, args := psql.Select(
@@ -63,7 +63,7 @@ func GetAlertsForToday(ctx context.Context) ([]Alert, error) {
 }
 
 func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 	isToday := psql.Quote("alert_date").EQ(psql.Arg(today))
 	isNotAcknowledged := psql.Quote("acknowledged").EQ(psql.Arg(false))
 
@@ -144,7 +144,7 @@ func InsertAlert(ctx context.Context, alert InsertAlertParams) (*Alert, error) {
 }
 
 func RemoveExpiredAlerts(ctx context.Context) error {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 	beforeToday := psql.Quote("alert_date").LT(psql.Arg(today))
 
 	query, args := psql.Delete(

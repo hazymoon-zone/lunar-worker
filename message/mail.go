@@ -31,9 +31,9 @@ func generateAcknowledgeAlertToken(alertId string) (string, error) {
 	claims := ReminderClaims{
 		AlertID: alertId,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(30 * time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+			NotBefore: jwt.NewNumericDate(time.Now().UTC()),
 			Issuer:    "lunar-reminder",
 			Subject:   fmt.Sprintf("reminder:%s", alertId),
 		},
@@ -89,7 +89,7 @@ func SendAlertEmail(alert db.Alert) (string, error) {
 	encodedToken := url.QueryEscape(acknowledgeToken)
 	acknowledgeReminderEventApiUrl := fmt.Sprintf("%s/alerts/acknowledge?token=%s", baseUrl, encodedToken)
 
-	now := time.Now()
+	now := time.Now().UTC()
 	lunarToday := calendar.NewLunarFromDate(now)
 	mg := mailgun.NewMailgun(secrets.MailgunSandBox, secrets.MailgunApiKey)
 	message := mailgun.NewMessage(

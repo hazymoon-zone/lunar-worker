@@ -29,7 +29,7 @@ type Reminder struct {
 }
 
 func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 	afterOrEqualToday := psql.Quote("next_alert_date").GTE(psql.Arg(today))
 
 	query, args := psql.Select(
@@ -64,7 +64,7 @@ func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {
 }
 
 func GetRepeatableReminders(ctx context.Context) ([]Reminder, error) {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 	beforeToday := psql.Quote("next_alert_date").LT(psql.Arg(today))
 	repeatYearly := psql.Quote("repeat").EQ(psql.Arg(RepeatModeYearly))
 	repeatMonthly := psql.Quote("repeat").EQ(psql.Arg(RepeatModeMonthly))

@@ -7,7 +7,7 @@ import (
 )
 
 func GetLunarCurrentYear(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now()
+	now := time.Now().UTC()
 	year := now.Year()
 	month := lunar.GetMonth()
 	day := lunar.GetDay()
@@ -16,7 +16,7 @@ func GetLunarCurrentYear(lunar calendar.Lunar) *calendar.Lunar {
 }
 
 func GetLunarNextYear(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now()
+	now := time.Now().UTC()
 	year := now.Year()
 	targetYear := year + 1
 	month := lunar.GetMonth()
@@ -26,7 +26,7 @@ func GetLunarNextYear(lunar calendar.Lunar) *calendar.Lunar {
 }
 
 func GetLunarCurrentMonth(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now()
+	now := time.Now().UTC()
 	year := now.Year()
 	month := now.Month()
 	day := lunar.GetDay()
@@ -35,7 +35,7 @@ func GetLunarCurrentMonth(lunar calendar.Lunar) *calendar.Lunar {
 }
 
 func GetLunarNextMonth(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now()
+	now := time.Now().UTC()
 	year := now.Year()
 	month := int(now.Month())
 	targetMonth := month + 1

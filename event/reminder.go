@@ -10,7 +10,7 @@ import (
 )
 
 func checkAlertDateEligible(alertDate time.Time, alertBefore *int32) bool {
-	now := time.Now()
+	now := time.Now().UTC()
 	alertFrom := alertDate
 	if alertBefore != nil {
 		alertFrom = alertFrom.AddDate(0, 0, -int(*alertBefore))
@@ -28,7 +28,7 @@ func GetNextAlertDate(repeat db.RepeatMode, reminderDate time.Time) *time.Time {
 	if lunarDate == nil {
 		return nil
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 
 	solarDate := lunarDate.GetSolar()
 	if solarDate == nil {
@@ -55,7 +55,7 @@ func GetNextAlertDate(repeat db.RepeatMode, reminderDate time.Time) *time.Time {
 }
 
 func getNextAlertDateYearly(reminderDate calendar.Lunar) *time.Time {
-	now := time.Now()
+	now := time.Now().UTC()
 	lunarCurrentYear := lunar.GetLunarCurrentYear(reminderDate)
 	if lunarCurrentYear == nil {
 		return nil
@@ -88,7 +88,7 @@ func getNextAlertDateYearly(reminderDate calendar.Lunar) *time.Time {
 }
 
 func getNextAlertDateMonthly(reminderDate calendar.Lunar) *time.Time {
-	now := time.Now()
+	now := time.Now().UTC()
 	lunarCurrentMonth := lunar.GetLunarCurrentMonth(reminderDate)
 	if lunarCurrentMonth == nil {
 		return nil
