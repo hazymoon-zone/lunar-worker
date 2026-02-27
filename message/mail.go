@@ -96,7 +96,7 @@ func SendAlertEmail(alert db.Alert) (string, error) {
 		fmt.Sprintf("Lunar Reminder <postmaster@%s>", secrets.MailgunSandBox),
 		alert.Reminder.MailSubject,
 		"Click the link to acknowledge this reminder",
-		"Bùi Đức Huy <huybui150396@gmail.com>",
+		fmt.Sprintf("%s <%s>", alert.Reminder.User.Name, alert.Reminder.User.Email),
 	)
 
 	htmlBody := fmt.Sprintf(`<!DOCTYPE html>

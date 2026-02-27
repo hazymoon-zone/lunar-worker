@@ -25,6 +25,7 @@ type Reminder struct {
 	AlertBefore   *int32
 	MailSubject   string
 	MailBody      string
+	User          User
 }
 
 func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {

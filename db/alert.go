@@ -73,10 +73,15 @@ func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
 			"a.reminder_id",
 			"r.mail_subject",
 			"r.mail_body",
+			"u.name",
+			"u.email",
 		),
 		sm.From("alert").As("a"),
 		sm.InnerJoin("reminder").As("r").On(
 			psql.Quote("r", "id").EQ(psql.Quote("a", "reminder_id")),
+		),
+		sm.InnerJoin("\"user\"").As("u").On(
+			psql.Quote("r", "user_id").EQ(psql.Quote("u", "id")),
 		),
 		sm.Where(psql.And(isToday, isNotAcknowledged)),
 	).MustBuild(ctx)
@@ -97,10 +102,12 @@ func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
 	for rows.Next() {
 		var alert Alert
 		var reminder Reminder
-		if err := rows.Scan(&alert.ID, &alert.ReminderID, &reminder.MailSubject, &reminder.MailBody); err != nil {
+		var user User
+		if err := rows.Scan(&alert.ID, &alert.ReminderID, &reminder.MailSubject, &reminder.MailBody, &user.Name, &user.Email); err != nil {
 			rlog.Error("Error scanning alerts rows to array", "err", err.Error())
 			return nil, err
 		}
+		reminder.User = user
 		alert.Reminder = reminder
 		alerts = append(alerts, alert)
 	}
