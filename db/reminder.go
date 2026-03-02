@@ -28,7 +28,7 @@ type Reminder struct {
 	User          User
 }
 
-func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {
+func GetRemindersFromToday(ctx context.Context, db DBTX) ([]Reminder, error) {
 	today := time.Now().UTC().Format("2006-01-02")
 	afterOrEqualToday := psql.Quote("next_alert_date").GTE(psql.Arg(today))
 
@@ -37,11 +37,6 @@ func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {
 		sm.From("reminder"),
 		sm.Where(afterOrEqualToday),
 	).MustBuild(ctx)
-
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
@@ -63,7 +58,7 @@ func GetRemindersFromToday(ctx context.Context) ([]Reminder, error) {
 	return reminders, nil
 }
 
-func GetRepeatableReminders(ctx context.Context) ([]Reminder, error) {
+func GetRepeatableReminders(ctx context.Context, db DBTX) ([]Reminder, error) {
 	today := time.Now().UTC().Format("2006-01-02")
 	beforeToday := psql.Quote("next_alert_date").LT(psql.Arg(today))
 	repeatYearly := psql.Quote("repeat").EQ(psql.Arg(RepeatModeYearly))
@@ -75,11 +70,6 @@ func GetRepeatableReminders(ctx context.Context) ([]Reminder, error) {
 		sm.From("reminder"),
 		sm.Where(psql.And(beforeToday, isRepeatable)),
 	).MustBuild(ctx)
-
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
@@ -101,19 +91,14 @@ func GetRepeatableReminders(ctx context.Context) ([]Reminder, error) {
 	return reminders, nil
 }
 
-func UpdateReminderNextAlertDate(ctx context.Context, reminderId string, nextAlertDate time.Time) error {
+func UpdateReminderNextAlertDate(ctx context.Context, db DBTX, reminderId string, nextAlertDate time.Time) error {
 	query, args := psql.Update(
 		um.Table("reminder"),
 		um.SetCol("next_alert_date").To(psql.Arg(nextAlertDate)),
 		um.Where(psql.Quote("id").EQ(psql.Arg(reminderId))),
 	).MustBuild(ctx)
 
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Query(ctx, query, args...)
+	_, err := db.Exec(ctx, query, args...)
 	if err != nil {
 		rlog.Error("Error updating reminder next alert date", "err", err.Error(), "reminderId", reminderId)
 		return err
