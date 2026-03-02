@@ -69,7 +69,7 @@ func VerifyAcknowledgeAlertToken(tokenString string) (*ReminderClaims, error) {
 	// Extract and validate claims
 	claims, ok := token.Claims.(*ReminderClaims)
 	if !ok || !token.Valid {
-		return nil, errors.New("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
