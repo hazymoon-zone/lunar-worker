@@ -38,13 +38,18 @@ var _ = cron.NewJob("send-alerts", cron.JobConfig{
 
 //encore:api private
 func ManageAlertsApi(ctx context.Context) error {
-	err := db.RemoveExpiredAlerts(ctx)
+	dbConn, err := db.GetDatabasePool(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = db.RemoveExpiredAlerts(ctx, dbConn)
 	if err != nil {
 		return err
 	}
 	rlog.Info("Removed expired alerts")
 
-	eligibleReminders, err := event.GetEligibleReminders(ctx)
+	eligibleReminders, err := event.GetEligibleReminders(ctx, dbConn)
 	if err != nil {
 		return err
 	}
@@ -55,7 +60,7 @@ func ManageAlertsApi(ctx context.Context) error {
 		return nil
 	}
 
-	alerts, err := event.CreateAlertsForEligibleReminders(ctx, eligibleReminders)
+	alerts, err := event.CreateAlertsForEligibleReminders(ctx, dbConn, eligibleReminders)
 	if err != nil {
 		return err
 	}
@@ -66,7 +71,12 @@ func ManageAlertsApi(ctx context.Context) error {
 
 //encore:api private
 func SendAlertsApi(ctx context.Context) error {
-	alerts, err := db.GetAlertsForSending(ctx)
+	dbConn, err := db.GetDatabasePool(ctx)
+	if err != nil {
+		return err
+	}
+
+	alerts, err := db.GetAlertsForSending(ctx, dbConn)
 	if err != nil {
 		return err
 	}
@@ -94,7 +104,12 @@ func SendAlertsApi(ctx context.Context) error {
 
 //encore:api private
 func RenewRepeatableRemindersApi(ctx context.Context) error {
-	reminders, err := db.GetRepeatableReminders(ctx)
+	dbConn, err := db.GetDatabasePool(ctx)
+	if err != nil {
+		return err
+	}
+
+	reminders, err := db.GetRepeatableReminders(ctx, dbConn)
 	if err != nil {
 		return err
 	}
@@ -110,7 +125,7 @@ func RenewRepeatableRemindersApi(ctx context.Context) error {
 			continue
 		}
 
-		err = db.UpdateReminderNextAlertDate(ctx, reminder.ID, *nextAlertDate)
+		err = db.UpdateReminderNextAlertDate(ctx, dbConn, reminder.ID, *nextAlertDate)
 		if err != nil {
 			stats.Failed++
 			rlog.Error("Error renewing reminder", "err", err.Error(), "reminderId", reminder.ID, "repeat", string(reminder.Repeat))
@@ -146,7 +161,12 @@ func AcknowledgeAlertApi(ctx context.Context, params *AcknowledgeAlertQueryParam
 		return &AcknowledgeAlertResponse{Message: ""}, err
 	}
 
-	err = db.AcknowledgeAlert(ctx, claims.AlertID)
+	dbConn, err := db.GetDatabasePool(ctx)
+	if err != nil {
+		return &AcknowledgeAlertResponse{Message: ""}, err
+	}
+
+	err = db.AcknowledgeAlert(ctx, dbConn, claims.AlertID)
 	if err != nil {
 		return &AcknowledgeAlertResponse{Message: ""}, err
 	}

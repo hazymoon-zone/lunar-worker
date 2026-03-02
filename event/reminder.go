@@ -120,8 +120,8 @@ func getNextAlertDateMonthly(reminderDate calendar.Lunar) *time.Time {
 	return &dateNextMonth
 }
 
-func GetEligibleReminders(ctx context.Context) ([]db.Reminder, error) {
-	reminders, err := db.GetRemindersFromToday(ctx)
+func GetEligibleReminders(ctx context.Context, dbConn db.DBTX) ([]db.Reminder, error) {
+	reminders, err := db.GetRemindersFromToday(ctx, dbConn)
 	if err != nil {
 		return nil, err
 	}

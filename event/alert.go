@@ -9,8 +9,8 @@ import (
 	"github.com/hazymoon22/lunar-worker/db"
 )
 
-func CreateAlertsForEligibleReminders(ctx context.Context, eligibleReminders []db.Reminder) ([]db.Alert, error) {
-	alerts, err := db.GetAlertsForToday(ctx)
+func CreateAlertsForEligibleReminders(ctx context.Context, dbConn db.DBTX, eligibleReminders []db.Reminder) ([]db.Alert, error) {
+	alerts, err := db.GetAlertsForToday(ctx, dbConn)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func CreateAlertsForEligibleReminders(ctx context.Context, eligibleReminders []d
 			AlertDate:  time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC),
 		}
 
-		alert, err := db.InsertAlert(ctx, insertAlert)
+		alert, err := db.InsertAlert(ctx, dbConn, insertAlert)
 		if err != nil {
 			continue
 		}

@@ -24,7 +24,7 @@ type Alert struct {
 	Reminder   Reminder `db:"reminder"`
 }
 
-func GetAlertsForToday(ctx context.Context) ([]Alert, error) {
+func GetAlertsForToday(ctx context.Context, db DBTX) ([]Alert, error) {
 	today := time.Now().UTC().Format("2006-01-02")
 	isToday := psql.Quote("alert_date").EQ(psql.Arg(today))
 
@@ -36,11 +36,6 @@ func GetAlertsForToday(ctx context.Context) ([]Alert, error) {
 		sm.From("alert"),
 		sm.Where(isToday),
 	).MustBuild(ctx)
-
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
@@ -62,7 +57,7 @@ func GetAlertsForToday(ctx context.Context) ([]Alert, error) {
 	return alerts, nil
 }
 
-func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
+func GetAlertsForSending(ctx context.Context, db DBTX) ([]Alert, error) {
 	today := time.Now().UTC().Format("2006-01-02")
 	isToday := psql.Quote("alert_date").EQ(psql.Arg(today))
 	isNotAcknowledged := psql.Quote("acknowledged").EQ(psql.Arg(false))
@@ -85,11 +80,6 @@ func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
 		),
 		sm.Where(psql.And(isToday, isNotAcknowledged)),
 	).MustBuild(ctx)
-
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
@@ -115,12 +105,7 @@ func GetAlertsForSending(ctx context.Context) ([]Alert, error) {
 	return alerts, nil
 }
 
-func InsertAlert(ctx context.Context, alert InsertAlertParams) (*Alert, error) {
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func InsertAlert(ctx context.Context, db DBTX, alert InsertAlertParams) (*Alert, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		rlog.Error("Error generating uuid", "err", err.Error())
@@ -143,7 +128,7 @@ func InsertAlert(ctx context.Context, alert InsertAlertParams) (*Alert, error) {
 	return &insertedAlert, nil
 }
 
-func RemoveExpiredAlerts(ctx context.Context) error {
+func RemoveExpiredAlerts(ctx context.Context, db DBTX) error {
 	today := time.Now().UTC().Format("2006-01-02")
 	beforeToday := psql.Quote("alert_date").LT(psql.Arg(today))
 
@@ -152,12 +137,7 @@ func RemoveExpiredAlerts(ctx context.Context) error {
 		dm.Where(beforeToday),
 	).MustBuild(ctx)
 
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(ctx, query, args...)
+	_, err := db.Exec(ctx, query, args...)
 	if err != nil {
 		rlog.Error("Error removing expired alerts from db", "err", err.Error())
 		return err
@@ -166,19 +146,14 @@ func RemoveExpiredAlerts(ctx context.Context) error {
 	return nil
 }
 
-func AcknowledgeAlert(ctx context.Context, alertId string) error {
+func AcknowledgeAlert(ctx context.Context, db DBTX, alertId string) error {
 	query, args := psql.Update(
 		um.Table("alert"),
 		um.SetCol("acknowledged").To(psql.Arg(true)),
 		um.Where(psql.Quote("id").EQ(psql.Arg(alertId))),
 	).MustBuild(ctx)
 
-	db, err := getDatabasePool(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(ctx, query, args...)
+	_, err := db.Exec(ctx, query, args...)
 	if err != nil {
 		rlog.Error("Error updating acknowledged status for alert", "err", err.Error(), "alertId", alertId)
 		return err
