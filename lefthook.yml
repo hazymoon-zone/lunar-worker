@@ -1,0 +1,21 @@
+output:
+- failure
+
+pre-commit:
+  parallel: true
+  commands:
+    gofmt-staged:
+      run: .lefthook/scripts/gofmt-staged.sh
+    golangci-lint-staged:
+      run: .lefthook/scripts/golangci-lint-staged.sh
+    typecheck-staged:
+      run: .lefthook/scripts/typecheck-staged.sh
+
+pre-push:
+  commands:
+    gofmt-check:
+      run: .lefthook/scripts/gofmt-check.sh
+    golangci-lint:
+      run: golangci-lint run ./...
+    typecheck:
+      run: go test -run=^$ ./...
