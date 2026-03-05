@@ -47,19 +47,46 @@ func TestSolarToDate(t *testing.T) {
 }
 
 func TestGetNextAlertDateUnsupportedRepeatReturnsNil(t *testing.T) {
-	reminderDate := time.Now().AddDate(-1, 0, 0)
-	got := GetNextAlertDate(db.RepeatMode("none"), reminderDate)
+	reminderDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	atTime := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
+	got := getNextAlertDateAt(db.RepeatMode("none"), reminderDate, atTime)
 	assert.Nil(t, got)
 }
 
-func TestGetNextAlertDateYearlyReturnsDate(t *testing.T) {
+func TestGetNextAlertDateReturnsCurrentLunarDateWhenNotPassed(t *testing.T) {
 	reminderDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	got := GetNextAlertDate(db.RepeatModeYearly, reminderDate)
-	assert.NotNil(t, got)
+	atTime := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	got := getNextAlertDateAt(db.RepeatModeYearly, reminderDate, atTime)
+	require.NotNil(t, got)
+
+	lunarDate := calendar.NewLunarFromYmd(reminderDate.Year(), int(reminderDate.Month()), reminderDate.Day())
+	require.NotNil(t, lunarDate)
+	expectedSolar := lunarDate.GetSolar()
+	require.NotNil(t, expectedSolar)
+	expected := solarToDate(*expectedSolar)
+
+	assert.Equal(t, expected, *got)
 }
 
-func TestGetNextAlertDateMonthlyReturnsDate(t *testing.T) {
+func TestGetNextAlertDateYearlyFollowsYearlyBranch(t *testing.T) {
 	reminderDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	got := GetNextAlertDate(db.RepeatModeMonthly, reminderDate)
-	assert.NotNil(t, got)
+	atTime := time.Date(2030, 3, 1, 0, 0, 0, 0, time.UTC)
+
+	got := getNextAlertDateAt(db.RepeatModeYearly, reminderDate, atTime)
+	require.NotNil(t, got)
+
+	expected := time.Date(2031, 1, 23, 0, 0, 0, 0, time.UTC)
+	assert.Equal(t, expected, *got)
+}
+
+func TestGetNextAlertDateMonthlyFollowsMonthlyBranch(t *testing.T) {
+	reminderDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	atTime := time.Date(2030, 2, 20, 0, 0, 0, 0, time.UTC)
+
+	got := getNextAlertDateAt(db.RepeatModeMonthly, reminderDate, atTime)
+	require.NotNil(t, got)
+
+	expected := time.Date(2030, 3, 4, 0, 0, 0, 0, time.UTC)
+	assert.Equal(t, expected, *got)
 }

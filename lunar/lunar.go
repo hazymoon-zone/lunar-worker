@@ -6,18 +6,16 @@ import (
 	"github.com/6tail/lunar-go/calendar"
 )
 
-func GetLunarCurrentYear(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now().UTC()
-	year := now.Year()
+func GetLunarCurrentYear(lunar calendar.Lunar, atTime time.Time) *calendar.Lunar {
+	year := atTime.UTC().Year()
 	month := lunar.GetMonth()
 	day := lunar.GetDay()
 
 	return calendar.NewLunarFromYmd(year, month, day)
 }
 
-func GetLunarNextYear(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now().UTC()
-	year := now.Year()
+func GetLunarNextYear(lunar calendar.Lunar, atTime time.Time) *calendar.Lunar {
+	year := atTime.UTC().Year()
 	targetYear := year + 1
 	month := lunar.GetMonth()
 	day := lunar.GetDay()
@@ -25,8 +23,8 @@ func GetLunarNextYear(lunar calendar.Lunar) *calendar.Lunar {
 	return calendar.NewLunarFromYmd(targetYear, month, day)
 }
 
-func GetLunarCurrentMonth(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now().UTC()
+func GetLunarCurrentMonth(lunar calendar.Lunar, atTime time.Time) *calendar.Lunar {
+	now := atTime.UTC()
 	year := now.Year()
 	month := now.Month()
 	day := lunar.GetDay()
@@ -34,8 +32,8 @@ func GetLunarCurrentMonth(lunar calendar.Lunar) *calendar.Lunar {
 	return calendar.NewLunarFromYmd(year, int(month), day)
 }
 
-func GetLunarNextMonth(lunar calendar.Lunar) *calendar.Lunar {
-	now := time.Now().UTC()
+func GetLunarNextMonth(lunar calendar.Lunar, atTime time.Time) *calendar.Lunar {
+	now := atTime.UTC()
 	year := now.Year()
 	month := int(now.Month())
 	targetMonth := month + 1

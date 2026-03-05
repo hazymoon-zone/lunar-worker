@@ -1,4 +1,4 @@
-package message
+package acktoken
 
 import (
 	"testing"
@@ -9,31 +9,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateAndVerifyAcknowledgeAlertToken(t *testing.T) {
+func TestGenerateAndVerify(t *testing.T) {
 	secrets.JwtSecret = "test-secret"
 
-	token, err := generateAcknowledgeAlertToken("alert-123")
+	token, err := Generate("alert-123")
 	require.NoError(t, err)
 
-	claims, err := VerifyAcknowledgeAlertToken(token)
+	claims, err := Verify(token)
 	require.NoError(t, err)
 	assert.Equal(t, "alert-123", claims.AlertID)
 }
 
-func TestVerifyAcknowledgeAlertTokenInvalidSignature(t *testing.T) {
+func TestVerifyInvalidSignature(t *testing.T) {
 	secrets.JwtSecret = "secret-a"
-	token, err := generateAcknowledgeAlertToken("alert-123")
+	token, err := Generate("alert-123")
 	require.NoError(t, err)
 
 	secrets.JwtSecret = "secret-b"
-	_, err = VerifyAcknowledgeAlertToken(token)
+	_, err = Verify(token)
 	require.Error(t, err)
 }
 
-func TestVerifyAcknowledgeAlertTokenExpired(t *testing.T) {
+func TestVerifyExpired(t *testing.T) {
 	secrets.JwtSecret = "test-secret"
 
-	claims := ReminderClaims{
+	claims := Claims{
 		AlertID: "alert-123",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Minute)),
@@ -47,6 +47,6 @@ func TestVerifyAcknowledgeAlertTokenExpired(t *testing.T) {
 	tokenString, err := token.SignedString([]byte(secrets.JwtSecret))
 	require.NoError(t, err)
 
-	_, err = VerifyAcknowledgeAlertToken(tokenString)
+	_, err = Verify(tokenString)
 	require.Error(t, err)
 }

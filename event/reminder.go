@@ -24,39 +24,41 @@ func solarToDate(solar calendar.Solar) time.Time {
 }
 
 func GetNextAlertDate(repeat db.RepeatMode, reminderDate time.Time) *time.Time {
+	return getNextAlertDateAt(repeat, reminderDate, time.Now().UTC())
+}
+
+func getNextAlertDateAt(repeat db.RepeatMode, reminderDate time.Time, atTime time.Time) *time.Time {
 	lunarDate := calendar.NewLunarFromYmd(reminderDate.Year(), int(reminderDate.Month()), reminderDate.Day())
 	if lunarDate == nil {
 		return nil
 	}
-	now := time.Now().UTC()
 
 	solarDate := lunarDate.GetSolar()
 	if solarDate == nil {
 		return nil
 	}
 
-	lunarTime := solarToDate(*solarDate).UnixMilli()
-	nowTime := now.UnixMilli()
+	lunarTimestamp := solarToDate(*solarDate).UnixMilli()
+	atTimestamp := atTime.UnixMilli()
 
-	if lunarTime >= nowTime {
+	if lunarTimestamp >= atTimestamp {
 		next := solarToDate(*lunarDate.GetSolar())
 		return &next
 	}
 
 	if repeat == db.RepeatModeYearly {
-		return getNextAlertDateYearly(*lunarDate)
+		return getNextAlertDateYearly(*lunarDate, atTime)
 	}
 
 	if repeat == db.RepeatModeMonthly {
-		return getNextAlertDateMonthly(*lunarDate)
+		return getNextAlertDateMonthly(*lunarDate, atTime)
 	}
 
 	return nil
 }
 
-func getNextAlertDateYearly(reminderDate calendar.Lunar) *time.Time {
-	now := time.Now().UTC()
-	lunarCurrentYear := lunar.GetLunarCurrentYear(reminderDate)
+func getNextAlertDateYearly(reminderDate calendar.Lunar, atTime time.Time) *time.Time {
+	lunarCurrentYear := lunar.GetLunarCurrentYear(reminderDate, atTime)
 	if lunarCurrentYear == nil {
 		return nil
 	}
@@ -68,13 +70,13 @@ func getNextAlertDateYearly(reminderDate calendar.Lunar) *time.Time {
 	dateCurrentYear := solarToDate(*solarCurrentYear)
 
 	lunarTime := dateCurrentYear.UnixMilli()
-	nowTime := now.UnixMilli()
+	nowTime := atTime.UnixMilli()
 
 	if lunarTime >= nowTime {
 		return &dateCurrentYear
 	}
 
-	lunarNextYear := lunar.GetLunarNextYear(reminderDate)
+	lunarNextYear := lunar.GetLunarNextYear(reminderDate, atTime)
 	if lunarNextYear == nil {
 		return nil
 	}
@@ -87,9 +89,8 @@ func getNextAlertDateYearly(reminderDate calendar.Lunar) *time.Time {
 	return &dateNextYear
 }
 
-func getNextAlertDateMonthly(reminderDate calendar.Lunar) *time.Time {
-	now := time.Now().UTC()
-	lunarCurrentMonth := lunar.GetLunarCurrentMonth(reminderDate)
+func getNextAlertDateMonthly(reminderDate calendar.Lunar, atTime time.Time) *time.Time {
+	lunarCurrentMonth := lunar.GetLunarCurrentMonth(reminderDate, atTime)
 	if lunarCurrentMonth == nil {
 		return nil
 	}
@@ -101,13 +102,13 @@ func getNextAlertDateMonthly(reminderDate calendar.Lunar) *time.Time {
 	dateCurrentMonth := solarToDate(*solarCurrentMonth)
 
 	lunarTime := dateCurrentMonth.UnixMilli()
-	nowTime := now.UnixMilli()
+	nowTime := atTime.UnixMilli()
 
 	if lunarTime >= nowTime {
 		return &dateCurrentMonth
 	}
 
-	lunarNextMonth := lunar.GetLunarNextMonth(reminderDate)
+	lunarNextMonth := lunar.GetLunarNextMonth(reminderDate, atTime)
 	if lunarNextMonth == nil {
 		return nil
 	}
