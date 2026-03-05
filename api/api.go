@@ -7,6 +7,7 @@ import (
 	"encore.dev/beta/errs"
 	"encore.dev/cron"
 	"encore.dev/rlog"
+	"github.com/hazymoon22/lunar-worker/acktoken"
 	"github.com/hazymoon22/lunar-worker/db"
 	"github.com/hazymoon22/lunar-worker/event"
 	"github.com/hazymoon22/lunar-worker/message"
@@ -149,27 +150,27 @@ type AcknowledgeAlertResponse struct {
 }
 
 //encore:api public method=GET path=/alerts/acknowledge tag:acknowledge
-func AcknowledgeAlertApi(ctx context.Context, params *AcknowledgeAlertQueryParams) (*AcknowledgeAlertResponse, error) {
+func AcknowledgeAlertApi(ctx context.Context, params *AcknowledgeAlertQueryParams) (AcknowledgeAlertResponse, error) {
 	if params == nil {
-		return &AcknowledgeAlertResponse{Message: ""}, errs.B().
+		return AcknowledgeAlertResponse{Message: ""}, errs.B().
 			Code(errs.Unauthenticated).
 			Err()
 	}
 
-	claims, err := message.VerifyAcknowledgeAlertToken(params.Token)
+	claims, err := acktoken.Verify(params.Token)
 	if err != nil {
-		return &AcknowledgeAlertResponse{Message: ""}, err
+		return AcknowledgeAlertResponse{Message: ""}, err
 	}
 
 	dbConn, err := db.GetDatabasePool(ctx)
 	if err != nil {
-		return &AcknowledgeAlertResponse{Message: ""}, err
+		return AcknowledgeAlertResponse{Message: ""}, err
 	}
 
 	err = db.AcknowledgeAlert(ctx, dbConn, claims.AlertID)
 	if err != nil {
-		return &AcknowledgeAlertResponse{Message: ""}, err
+		return AcknowledgeAlertResponse{Message: ""}, err
 	}
 
-	return &AcknowledgeAlertResponse{Message: "Reminder acknowledged"}, nil
+	return AcknowledgeAlertResponse{Message: "Reminder acknowledged"}, nil
 }

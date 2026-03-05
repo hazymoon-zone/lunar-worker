@@ -12,12 +12,12 @@ import (
 func TestGetLunarCurrentYear(t *testing.T) {
 	base := calendar.NewLunarFromYmd(2024, 1, 1)
 	require.NotNil(t, base)
+	atTime := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	got := GetLunarCurrentYear(*base)
+	got := GetLunarCurrentYear(*base, atTime)
 	require.NotNil(t, got)
 
-	now := time.Now()
-	assert.Equal(t, now.Year(), got.GetYear())
+	assert.Equal(t, 2030, got.GetYear())
 	assert.Equal(t, 1, got.GetMonth())
 	assert.Equal(t, 1, got.GetDay())
 }
@@ -25,12 +25,12 @@ func TestGetLunarCurrentYear(t *testing.T) {
 func TestGetLunarNextYear(t *testing.T) {
 	base := calendar.NewLunarFromYmd(2024, 1, 1)
 	require.NotNil(t, base)
+	atTime := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	got := GetLunarNextYear(*base)
+	got := GetLunarNextYear(*base, atTime)
 	require.NotNil(t, got)
 
-	now := time.Now()
-	assert.Equal(t, now.Year()+1, got.GetYear())
+	assert.Equal(t, 2031, got.GetYear())
 	assert.Equal(t, 1, got.GetMonth())
 	assert.Equal(t, 1, got.GetDay())
 }
@@ -38,30 +38,25 @@ func TestGetLunarNextYear(t *testing.T) {
 func TestGetLunarCurrentMonth(t *testing.T) {
 	base := calendar.NewLunarFromYmd(2024, 1, 1)
 	require.NotNil(t, base)
+	atTime := time.Date(2030, 2, 20, 0, 0, 0, 0, time.UTC)
 
-	got := GetLunarCurrentMonth(*base)
+	got := GetLunarCurrentMonth(*base, atTime)
 	require.NotNil(t, got)
 
-	now := time.Now()
-	assert.Equal(t, now.Year(), got.GetYear())
-	assert.Equal(t, int(now.Month()), got.GetMonth())
+	assert.Equal(t, 2030, got.GetYear())
+	assert.Equal(t, 2, got.GetMonth())
 	assert.Equal(t, 1, got.GetDay())
 }
 
 func TestGetLunarNextMonth(t *testing.T) {
 	base := calendar.NewLunarFromYmd(2024, 1, 1)
 	require.NotNil(t, base)
+	atTime := time.Date(2030, 2, 20, 0, 0, 0, 0, time.UTC)
 
-	got := GetLunarNextMonth(*base)
-
-	now := time.Now()
-	if now.Month() == time.December {
-		assert.Nil(t, got)
-		return
-	}
+	got := GetLunarNextMonth(*base, atTime)
 
 	require.NotNil(t, got)
-	assert.Equal(t, now.Year(), got.GetYear())
-	assert.Equal(t, int(now.Month())+1, got.GetMonth())
+	assert.Equal(t, 2030, got.GetYear())
+	assert.Equal(t, 3, got.GetMonth())
 	assert.Equal(t, 1, got.GetDay())
 }
