@@ -9,6 +9,10 @@ concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -71,34 +75,42 @@ jobs:
           echo "ENCORE_INSTALL=$HOME/.encore" >> $GITHUB_ENV
           echo "$HOME/.encore/bin" >> $GITHUB_PATH
 
+      - name: Fetch secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.15
+        with:
+          method: "oidc"
+          identity-id: "336ff1b2-cf61-4de3-b249-52da696d39b0"
+          project-slug: "lunar-reminder-q-gd-a"
+          env-slug: "dev"
+
       - name: Encore Auth
-        run: encore auth login --auth-key ${{ secrets.ENCORE_AUTH_KEY }}
+        run: encore auth login --auth-key ${{ env.ENCORE_AUTH_KEY }}
 
       - name: Ensure Neon PR branch exists
         id: neon_create
         uses: neondatabase/create-branch-action@v6
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ env.NEON_PROJECT_ID }}
           branch_name: ${{ needs.prepare.outputs.neon_branch_name }}
           parent_branch: production
-          api_key: ${{ secrets.NEON_API_KEY }}
+          api_key: ${{ env.NEON_API_KEY }}
 
       - name: Reset Neon PR branch from parent
         id: neon_reset
         uses: neondatabase/reset-branch-action@v1
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ env.NEON_PROJECT_ID }}
           branch: ${{ needs.prepare.outputs.neon_branch_name }}
           parent: true
-          api_key: ${{ secrets.NEON_API_KEY }}
+          api_key: ${{ env.NEON_API_KEY }}
 
       - name: Generate .secrets.local.cue
         run: |
           cat <<EOF > .secrets.local.cue
           LunarReminderDatabase: "${{ steps.neon_reset.outputs.db_url }}"
-          JwtSecret: "${{ secrets.JWT_SECRET }}"
-          MailgunApiKey: "${{ secrets.MAILGUN_API_KEY }}"
-          MailgunSandBox: "${{ vars.MAILGUN_SANDBOX }}"
+          JwtSecret: "${{ env.JWT_SECRET }}"
+          MailgunApiKey: "${{ env.MAILGUN_API_KEY }}"
+          MailgunSandBox: "${{ env.MAILGUN_SANDBOX }}"
           EOF
 
       - name: Run integration tests
@@ -112,9 +124,17 @@ jobs:
     needs: prepare
 
     steps:
+      - name: Fetch secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.15
+        with:
+          method: "oidc"
+          identity-id: "336ff1b2-cf61-4de3-b249-52da696d39b0"
+          project-slug: "lunar-reminder-q-gd-a"
+          env-slug: "dev"
+
       - name: Delete Neon PR branch
         uses: neondatabase/delete-branch-action@v3
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ env.NEON_PROJECT_ID }}
           branch: ${{ needs.prepare.outputs.neon_branch_name }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+          api_key: ${{ env.NEON_API_KEY }}
