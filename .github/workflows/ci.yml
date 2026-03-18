@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     outputs:
       neon_branch_name: ${{ steps.branch_name.outputs.name }}
     steps:
@@ -32,7 +32,7 @@ jobs:
 
   unit-test:
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
 
@@ -40,16 +40,18 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 'stable'
+          cache: true
+          cache-dependency-path: go.sum
 
       - name: Manage dependencies
-        run: go mod tidy
+        run: go mod download
 
       - name: Unit test
         run: make test
 
   integration-test:
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
@@ -58,9 +60,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 'stable'
+          cache: true
+          cache-dependency-path: go.sum
 
       - name: Manage dependencies
-        run: go mod tidy
+        run: go mod download
 
       - name: Download Encore CLI script
         uses: sozo-design/curl@v1.0.2
@@ -120,7 +124,7 @@ jobs:
 
   cleanup-neon-branch:
     if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     needs: prepare
 
     steps:
