@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"encore.dev/rlog"
+	"github.com/6tail/lunar-go/calendar"
+	"github.com/hazymoon22/lunar-worker/lunar"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/bob/dialect/psql/um"
@@ -29,8 +31,11 @@ type Reminder struct {
 }
 
 func GetRemindersFromToday(ctx context.Context, db DBTX) ([]Reminder, error) {
-	today := time.Now().UTC().Format("2006-01-02")
-	afterOrEqualToday := psql.Quote("next_alert_date").GTE(psql.Arg(today))
+	today := time.Now().UTC()
+	lunarToday := calendar.NewLunarFromDate(today)
+	lunarTodayDate := lunar.LunarToDate(*lunarToday).Format("2026-06-06")
+
+	afterOrEqualToday := psql.Quote("next_alert_date").GTE(psql.Arg(lunarTodayDate))
 
 	query, args := psql.Select(
 		sm.Columns("id", "next_alert_date", "alert_before"),
@@ -59,8 +64,10 @@ func GetRemindersFromToday(ctx context.Context, db DBTX) ([]Reminder, error) {
 }
 
 func GetRepeatableReminders(ctx context.Context, db DBTX) ([]Reminder, error) {
-	today := time.Now().UTC().Format("2006-01-02")
-	beforeToday := psql.Quote("next_alert_date").LT(psql.Arg(today))
+	today := time.Now().UTC()
+	lunarToday := calendar.NewLunarFromDate(today)
+	lunarTodayDate := lunar.LunarToDate(*lunarToday).Format("2026-06-06")
+	beforeToday := psql.Quote("next_alert_date").LT(psql.Arg(lunarTodayDate))
 	repeatYearly := psql.Quote("repeat").EQ(psql.Arg(RepeatModeYearly))
 	repeatMonthly := psql.Quote("repeat").EQ(psql.Arg(RepeatModeMonthly))
 	isRepeatable := psql.Or(repeatYearly, repeatMonthly)
