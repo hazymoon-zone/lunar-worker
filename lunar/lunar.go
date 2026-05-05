@@ -41,3 +41,11 @@ func GetLunarNextMonth(lunar calendar.Lunar, atTime time.Time) *calendar.Lunar {
 
 	return calendar.NewLunarFromYmd(year, targetMonth, day)
 }
+
+func SolarToDate(solar calendar.Solar) time.Time {
+	return time.Date(solar.GetYear(), time.Month(solar.GetMonth()), solar.GetDay(), 0, 0, 0, 0, time.UTC)
+}
+
+func LunarToDate(lunar calendar.Lunar) time.Time {
+	return time.Date(lunar.GetYear(), time.Month(lunar.GetMonth()), lunar.GetDay(), 0, 0, 0, 0, time.UTC)
+}

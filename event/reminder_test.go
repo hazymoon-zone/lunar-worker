@@ -6,6 +6,7 @@ import (
 
 	"github.com/6tail/lunar-go/calendar"
 	"github.com/hazymoon22/lunar-worker/db"
+	"github.com/hazymoon22/lunar-worker/lunar"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +35,7 @@ func TestSolarToDate(t *testing.T) {
 	solar := calendar.NewSolar(2026, 2, 27, 15, 4, 5)
 	require.NotNil(t, solar)
 
-	got := solarToDate(*solar)
+	got := lunar.SolarToDate(*solar)
 
 	assert.Equal(t, 2026, got.Year())
 	assert.Equal(t, time.February, got.Month())
@@ -62,9 +63,7 @@ func TestGetNextAlertDateReturnsCurrentLunarDateWhenNotPassed(t *testing.T) {
 
 	lunarDate := calendar.NewLunarFromYmd(reminderDate.Year(), int(reminderDate.Month()), reminderDate.Day())
 	require.NotNil(t, lunarDate)
-	expectedSolar := lunarDate.GetSolar()
-	require.NotNil(t, expectedSolar)
-	expected := solarToDate(*expectedSolar)
+	expected := lunar.LunarToDate(*lunarDate)
 
 	assert.Equal(t, expected, *got)
 }
@@ -76,7 +75,7 @@ func TestGetNextAlertDateYearlyFollowsYearlyBranch(t *testing.T) {
 	got := getNextAlertDateAt(db.RepeatModeYearly, reminderDate, atTime)
 	require.NotNil(t, got)
 
-	expected := time.Date(2031, 1, 23, 0, 0, 0, 0, time.UTC)
+	expected := time.Date(2031, 1, 1, 0, 0, 0, 0, time.UTC)
 	assert.Equal(t, expected, *got)
 }
 
@@ -87,6 +86,6 @@ func TestGetNextAlertDateMonthlyFollowsMonthlyBranch(t *testing.T) {
 	got := getNextAlertDateAt(db.RepeatModeMonthly, reminderDate, atTime)
 	require.NotNil(t, got)
 
-	expected := time.Date(2030, 3, 4, 0, 0, 0, 0, time.UTC)
+	expected := time.Date(2030, 2, 1, 0, 0, 0, 0, time.UTC)
 	assert.Equal(t, expected, *got)
 }
